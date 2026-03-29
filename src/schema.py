@@ -4,6 +4,7 @@ This module defines the structured output format for LLM extraction.
 All scores use 0.0-1.0 scale with defined anchors.
 All categorical fields use fixed vocabularies.
 """
+from __future__ import annotations
 
 from datetime import date
 from enum import Enum

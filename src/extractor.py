@@ -1,4 +1,5 @@
 """Signal extraction from Berkshire letters using Claude."""
+from __future__ import annotations
 
 import json
 from pathlib import Path

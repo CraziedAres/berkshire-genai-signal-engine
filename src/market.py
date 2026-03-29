@@ -10,6 +10,7 @@ Assumptions:
 4. Returns are simple returns, not log returns (more interpretable)
 5. Volatility is annualized using sqrt(252) convention
 """
+from __future__ import annotations
 
 from datetime import date, timedelta
 from pathlib import Path
@@ -70,7 +71,8 @@ def fetch_price_data(
 
     # Check cache
     if cache_path.exists() and not force_refresh:
-        cached = pd.read_csv(cache_path, index_col=0, parse_dates=True)
+        cached = pd.read_csv(cache_path, index_col=0)
+        cached.index = pd.to_datetime(cached.index, utc=True).tz_localize(None)
         last_cached = cached.index.max().date()
 
         # If cache is recent enough, use it

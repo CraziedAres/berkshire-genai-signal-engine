@@ -3,6 +3,7 @@
 This module provides analysis functions on top of the dataset builder.
 For the core dataset building, see src/dataset.py.
 """
+from __future__ import annotations
 
 import pandas as pd
 

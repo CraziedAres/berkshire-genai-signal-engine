@@ -10,6 +10,7 @@ The resulting dataset is suitable for:
 - Signal backtesting
 - Feature engineering for ML models
 """
+from __future__ import annotations
 
 from datetime import date
 from pathlib import Path
