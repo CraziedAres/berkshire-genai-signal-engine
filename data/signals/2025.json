@@ -1,0 +1,115 @@
+{
+  "metadata": {
+    "letter_year": 2025,
+    "release_date": "2026-02-28",
+    "author": "warren_buffett_charlie_munger",
+    "word_count_approx": 3900
+  },
+  "confidence": {
+    "overall_confidence": 0.85,
+    "operating_business_confidence": 0.88,
+    "investment_portfolio_confidence": 0.82,
+    "succession_confidence": 0.98,
+    "confidence_rationale": "Greg Abel's first letter exudes confidence in transition: 'Warren remains Chairman, in office five days a week.' Strong operating results with $46B cash flows and 87.1% combined ratio. Succession confidence near-maximum as transition is complete and successful."
+  },
+  "uncertainty": {
+    "overall_uncertainty": 0.35,
+    "macro_uncertainty": 0.42,
+    "market_uncertainty": 0.38,
+    "operational_uncertainty": 0.18,
+    "uncertainty_rationale": "Moderate uncertainty from LA wildfires and first year of new leadership. However, benign hurricane season and strong results offset concerns. 'Berkshire is in excellent condition' suggests low operational uncertainty."
+  },
+  "capital_allocation": {
+    "posture": "selective_deploy",
+    "cash_intent": "ready_to_deploy",
+    "buyback_enthusiasm": 0.52,
+    "dividend_stance": "not_discussed",
+    "capital_rationale": "OxyChem acquisition demonstrates willingness to deploy. 'Patience remains our competitive advantage' but active M&A suggests shift from pure accumulation. Still holding substantial reserves."
+  },
+  "market_commentary": {
+    "regime": "fair",
+    "valuation_concern": 0.48,
+    "opportunity_richness": 0.55,
+    "speculation_warning": 0.22,
+    "market_rationale": "OxyChem acquisition suggests improved deal environment. Less emphasis on overvaluation than prior years. 'Deploy capital when opportunities arise' without strong warnings suggests fairer conditions."
+  },
+  "insurance_float": {
+    "float_emphasis": 0.82,
+    "outlook": "favorable",
+    "underwriting_discipline": 0.92,
+    "cat_exposure_concern": 0.55,
+    "insurance_rationale": "Float exceeds $170B with underwriting profits. Combined ratio of 87.1% beats five-year average. LA wildfires mentioned but benign hurricane season offset losses. 'Discipline is not negotiable' emphasized strongly."
+  },
+  "acquisitions": {
+    "stance": "opportunistic",
+    "elephant_hunting": 0.65,
+    "bolt_on_interest": 0.78,
+    "deal_environment": 0.62,
+    "acquisition_rationale": "OxyChem acquisition completed—'well-managed business with durable competitive advantages, available at a fair price.' More active stance than prior years. Deal environment appears improved."
+  },
+  "major_themes": [
+    {
+      "theme": "CEO transition complete",
+      "prominence": 0.95,
+      "sentiment": "positive"
+    },
+    {
+      "theme": "OxyChem acquisition",
+      "prominence": 0.82,
+      "sentiment": "positive"
+    },
+    {
+      "theme": "Insurance discipline",
+      "prominence": 0.78,
+      "sentiment": "positive"
+    },
+    {
+      "theme": "Leadership continuity",
+      "prominence": 0.75,
+      "sentiment": "positive"
+    },
+    {
+      "theme": "LA wildfire losses",
+      "prominence": 0.58,
+      "sentiment": "negative"
+    },
+    {
+      "theme": "Buffett as Chairman",
+      "prominence": 0.55,
+      "sentiment": "positive"
+    }
+  ],
+  "notable_excerpts": [
+    {
+      "quote": "This is my first letter to you as CEO of Berkshire Hathaway. Warren Buffett remains our Chairman and is in the office five days a week.",
+      "signal_type": "succession",
+      "significance": "Marks historic transition while emphasizing continuity with Buffett remaining active."
+    },
+    {
+      "quote": "Berkshire produced $46 billion of net cash flows from operating activities in 2025, comparing favorably with our five-year average.",
+      "signal_type": "confidence",
+      "significance": "Strong operating performance in first year of new leadership validates transition."
+    },
+    {
+      "quote": "Our property-casualty businesses achieved a combined ratio of 87.1%, better than our five-year average of 90.7%.",
+      "signal_type": "insurance_float",
+      "significance": "Insurance outperformance demonstrates continued underwriting discipline."
+    },
+    {
+      "quote": "The Lubrizol team was integral to our acquisition of OxyChem and its planned integration as a standalone operating business.",
+      "signal_type": "acquisition_stance",
+      "significance": "Signals return to active M&A after years of patience."
+    },
+    {
+      "quote": "Discipline is not negotiable.",
+      "signal_type": "insurance_float",
+      "significance": "Emphatic statement of underwriting philosophy under new leadership."
+    },
+    {
+      "quote": "My job is to preserve and extend what Warren built.",
+      "signal_type": "confidence",
+      "significance": "Greg Abel's mission statement emphasizes continuity over change."
+    }
+  ],
+  "executive_summary": "Greg Abel's first CEO letter marks a historic transition while emphasizing continuity—Buffett remains Chairman, in office daily. Operating results were strong with $46B cash flows and insurance combined ratio of 87.1%. The OxyChem acquisition signals a more active deployment stance after years of cash accumulation. LA wildfires caused early losses but benign hurricane season helped overall results. The tone is confident and reassuring, focused on preserving Berkshire's culture while demonstrating capable new leadership."
+}

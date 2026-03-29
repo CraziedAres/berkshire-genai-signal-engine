@@ -42,6 +42,7 @@ LETTER_RELEASE_DATES: dict[int, date] = {
     2022: date(2023, 2, 25),
     2023: date(2024, 2, 24),
     2024: date(2025, 2, 22),
+    2025: date(2026, 2, 28),
 }
 
 
