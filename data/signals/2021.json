@@ -1,0 +1,105 @@
+{
+  "metadata": {
+    "letter_year": 2021,
+    "release_date": "2022-02-26",
+    "author": "warren_buffett_charlie_munger",
+    "word_count_approx": 3500
+  },
+  "confidence": {
+    "overall_confidence": 0.78,
+    "operating_business_confidence": 0.85,
+    "investment_portfolio_confidence": 0.72,
+    "succession_confidence": 0.78,
+    "confidence_rationale": "Strong confidence in operating results with record $27.5B earnings. 'Four giants' described as performing 'admirably.' Manufacturing businesses 'set records.' Resilience of American consumer noted as 'amazing.'"
+  },
+  "uncertainty": {
+    "overall_uncertainty": 0.42,
+    "macro_uncertainty": 0.48,
+    "market_uncertainty": 0.55,
+    "operational_uncertainty": 0.22,
+    "uncertainty_rationale": "Moderate uncertainty, significantly lower than 2020. Market frothiness noted but operational confidence high. No explicit uncertainty language about Berkshire's businesses."
+  },
+  "capital_allocation": {
+    "posture": "accumulate_cash",
+    "cash_intent": "ready_to_deploy",
+    "buyback_enthusiasm": 0.78,
+    "dividend_stance": "not_discussed",
+    "capital_rationale": "Record $27.1B buybacks but cash still grew to $146.7B. Clear preference to deploy productively but 'will not stretch for yield or compromise on quality.' Patience emphasized."
+  },
+  "market_commentary": {
+    "regime": "euphoric",
+    "valuation_concern": 0.82,
+    "opportunity_richness": 0.18,
+    "speculation_warning": 0.88,
+    "market_rationale": "Strong speculation warning: 'SPACs proliferated. Meme stocks captured headlines. Cryptocurrencies soared.' Market described as 'buoyant' with 'capital abundant and fear scarce.' Few attractive opportunities found."
+  },
+  "insurance_float": {
+    "float_emphasis": 0.62,
+    "outlook": "favorable",
+    "underwriting_discipline": 0.80,
+    "cat_exposure_concern": 0.38,
+    "insurance_rationale": "Moderate emphasis on insurance. Float continues growing. Operating well but less prominent theme than other years."
+  },
+  "acquisitions": {
+    "stance": "patient",
+    "elephant_hunting": 0.35,
+    "bolt_on_interest": 0.55,
+    "deal_environment": 0.15,
+    "acquisition_rationale": "Deal environment very unfavorable: 'prices demanded by sellers of private businesses remained elevated.' Patience repeatedly emphasized: 'Patience is a virtue in investing. We have demonstrated this repeatedly over sixty years.'"
+  },
+  "major_themes": [
+    {
+      "theme": "Market speculation warning",
+      "prominence": 0.88,
+      "sentiment": "negative"
+    },
+    {
+      "theme": "Record operating earnings",
+      "prominence": 0.82,
+      "sentiment": "positive"
+    },
+    {
+      "theme": "Share buyback discipline",
+      "prominence": 0.78,
+      "sentiment": "positive"
+    },
+    {
+      "theme": "Four giants performance",
+      "prominence": 0.75,
+      "sentiment": "positive"
+    },
+    {
+      "theme": "Capital deployment patience",
+      "prominence": 0.72,
+      "sentiment": "neutral"
+    }
+  ],
+  "notable_excerpts": [
+    {
+      "quote": "SPACs proliferated. Meme stocks captured headlines. Cryptocurrencies soared.",
+      "signal_type": "market_commentary",
+      "significance": "Concise characterization of euphoric market conditions and speculation."
+    },
+    {
+      "quote": "When capital is abundant and fear is scarce, bargains are rare.",
+      "signal_type": "market_commentary",
+      "significance": "Classic Buffett aphorism signaling overvalued environment."
+    },
+    {
+      "quote": "We found few attractive opportunities among publicly traded stocks. The prices demanded by sellers of private businesses remained elevated.",
+      "signal_type": "acquisition_stance",
+      "significance": "Explains cash accumulation despite preference to deploy."
+    },
+    {
+      "quote": "Patience is a virtue in investing. We have demonstrated this repeatedly over sixty years. We see no reason to change now.",
+      "signal_type": "capital_allocation",
+      "significance": "Reinforces disciplined approach despite external pressure to deploy."
+    },
+    {
+      "quote": "The resilience of the American consumer continues to amaze.",
+      "signal_type": "confidence",
+      "significance": "Optimistic note on underlying economic strength."
+    }
+  ],
+  "executive_summary": "The 2021 letter celebrates record operating earnings while issuing strong warnings about market speculation (SPACs, meme stocks, crypto). Despite record $27.1B in buybacks, cash grew to $146.7B as attractive acquisition opportunities remained scarce. Buffett emphasizes patience repeatedly, noting that 'when capital is abundant and fear is scarce, bargains are rare.' The four giants (insurance, BNSF, BHE, Apple) all performed well."
+}

@@ -39,7 +39,7 @@ ENV/
 
 # Data (keep structure, ignore large files)
 data/stock/*.csv
-data/signals/*.json
+# Note: signals/*.json included for demo purposes
 
 # OS
 .DS_Store

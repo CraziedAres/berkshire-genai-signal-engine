@@ -1,0 +1,105 @@
+{
+  "metadata": {
+    "letter_year": 2022,
+    "release_date": "2023-02-25",
+    "author": "warren_buffett",
+    "word_count_approx": 3600
+  },
+  "confidence": {
+    "overall_confidence": 0.85,
+    "operating_business_confidence": 0.82,
+    "investment_portfolio_confidence": 0.80,
+    "succession_confidence": 0.78,
+    "confidence_rationale": "High confidence throughout. Record capital deployment of $51B indicates conviction in opportunities. 'We remain optimistic about America's future.' Operating earnings up to $30.8B with all segments contributing."
+  },
+  "uncertainty": {
+    "overall_uncertainty": 0.35,
+    "macro_uncertainty": 0.45,
+    "market_uncertainty": 0.38,
+    "operational_uncertainty": 0.22,
+    "uncertainty_rationale": "Lower uncertainty than prior years. Inflation acknowledged but treated as manageable. 'Interest rates are now at levels that make sense.' No expressions of economic unpredictability."
+  },
+  "capital_allocation": {
+    "posture": "aggressive_deploy",
+    "cash_intent": "deploy_soon",
+    "buyback_enthusiasm": 0.55,
+    "dividend_stance": "not_discussed",
+    "capital_rationale": "Most active deployment year ever at $51B. Alleghany acquisition ($11.6B), major Occidental stake buildup. Buybacks lower at $7.9B as better opportunities found in acquisitions and stocks."
+  },
+  "market_commentary": {
+    "regime": "fair",
+    "valuation_concern": 0.42,
+    "opportunity_richness": 0.75,
+    "speculation_warning": 0.28,
+    "market_rationale": "Dramatically improved environment: 'Rising interest rates and falling asset prices created the kind of environment we have patiently awaited.' Era of free money described as 'ending'—positive for disciplined allocators."
+  },
+  "insurance_float": {
+    "float_emphasis": 0.70,
+    "outlook": "very_favorable",
+    "underwriting_discipline": 0.82,
+    "cat_exposure_concern": 0.35,
+    "insurance_rationale": "Float reached $164.1B with $2.6B underwriting profit. GEICO 'returned to growth after remediation.' Insurance described as 'particularly strong.'"
+  },
+  "acquisitions": {
+    "stance": "hunting",
+    "elephant_hunting": 0.88,
+    "bolt_on_interest": 0.72,
+    "deal_environment": 0.78,
+    "acquisition_rationale": "Active hunting mode with Alleghany acquisition completed. 'For the first time in years, the phone was ringing with opportunities.' Deal environment transformed by rising rates."
+  },
+  "major_themes": [
+    {
+      "theme": "Record capital deployment",
+      "prominence": 0.92,
+      "sentiment": "positive"
+    },
+    {
+      "theme": "Alleghany acquisition",
+      "prominence": 0.85,
+      "sentiment": "positive"
+    },
+    {
+      "theme": "Occidental Petroleum investment",
+      "prominence": 0.82,
+      "sentiment": "positive"
+    },
+    {
+      "theme": "Rising interest rates opportunity",
+      "prominence": 0.78,
+      "sentiment": "positive"
+    },
+    {
+      "theme": "Inflation management",
+      "prominence": 0.62,
+      "sentiment": "neutral"
+    }
+  ],
+  "notable_excerpts": [
+    {
+      "quote": "In total, we deployed over $51 billion in 2022—our most active year ever for capital deployment.",
+      "signal_type": "capital_allocation",
+      "significance": "Record deployment signals confidence in opportunities and shift from defensive posture."
+    },
+    {
+      "quote": "For the first time in years, the phone was ringing with opportunities.",
+      "signal_type": "acquisition_stance",
+      "significance": "Market correction created deal flow after years of patience."
+    },
+    {
+      "quote": "Rising interest rates and falling asset prices created the kind of environment we have patiently awaited.",
+      "signal_type": "market_commentary",
+      "significance": "Explicit statement that market regime shifted favorably for buyers."
+    },
+    {
+      "quote": "Interest rates are now at levels that make sense. The era of free money appears to be ending.",
+      "signal_type": "market_commentary",
+      "significance": "Positive view on rate normalization benefiting disciplined allocators."
+    },
+    {
+      "quote": "Alleghany is exactly the kind of business we seek: well-managed, with a long track record, and available at a fair price.",
+      "signal_type": "acquisition_stance",
+      "significance": "Describes ideal acquisition criteria and signals satisfaction with deal."
+    }
+  ],
+  "executive_summary": "The 2022 letter marks a dramatic shift to aggressive capital deployment after years of patience. Berkshire deployed a record $51B including the $11.6B Alleghany acquisition and major Occidental Petroleum stake. Rising interest rates and falling asset prices 'created the kind of environment we patiently awaited.' Operating earnings rose to $30.8B. Buffett expresses optimism about both Berkshire and America's future, with the era of 'free money' ending seen as positive for disciplined allocators."
+}
