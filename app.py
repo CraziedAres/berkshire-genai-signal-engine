@@ -342,14 +342,14 @@ with col3:
 
 st.header("Signals vs Forward Returns")
 
-if df_filtered["return_30d"].notna().any():
+if df_filtered["return_fwd_30d"].notna().any():
     col1, col2 = st.columns(2)
 
     with col1:
         fig = px.scatter(
             df_filtered,
             x="composite_bullish",
-            y="return_30d",
+            y="return_fwd_30d",
             text="letter_year",
             title="Bullish Composite vs 30-Day Return",
             trendline="ols" if len(df_filtered) > 2 else None,
@@ -366,7 +366,7 @@ if df_filtered["return_30d"].notna().any():
         fig = px.scatter(
             df_filtered,
             x="composite_defensive",
-            y="return_90d",
+            y="return_fwd_90d",
             text="letter_year",
             title="Defensive Composite vs 90-Day Return",
             trendline="ols" if len(df_filtered) > 2 else None,
