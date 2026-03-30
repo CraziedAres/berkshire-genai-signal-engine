@@ -12,6 +12,7 @@ from src.analyzer import (
     get_themes_over_time,
 )
 from src.extractor import get_available_signals
+from src.valuation import compute_fair_value, get_historical_fair_values
 
 st.set_page_config(
     page_title="Berkshire Signal Engine",
@@ -31,6 +32,108 @@ if not available:
 # Load data
 df = build_analysis_dataframe()
 analyses = get_all_analyses()
+
+# =============================================================================
+# FAIR VALUE ESTIMATE (HERO SECTION)
+# =============================================================================
+
+st.divider()
+
+try:
+    fv = compute_fair_value()
+
+    # Main fair value display
+    col1, col2, col3, col4 = st.columns([2, 1, 1, 1])
+
+    with col1:
+        st.metric(
+            label="📊 Signal-Based Fair Value",
+            value=f"${fv.fair_value:,.2f}",
+            delta=f"{fv.signal_adjustment:+.1%} signal adjustment",
+        )
+        st.caption(f"Range: ${fv.fair_value_low:,.2f} – ${fv.fair_value_high:,.2f}")
+
+    with col2:
+        st.metric(
+            label="Current Price",
+            value=f"${fv.current_price:,.2f}",
+            delta=f"{-fv.premium_discount_pct:+.1f}% vs fair value",
+            delta_color="inverse",
+        )
+
+    with col3:
+        sentiment_colors = {
+            "Bullish": "🟢",
+            "Slightly Bullish": "🟢",
+            "Neutral": "⚪",
+            "Slightly Bearish": "🟠",
+            "Bearish": "🔴",
+        }
+        st.metric(
+            label="Signal Sentiment",
+            value=f"{sentiment_colors.get(fv.signal_sentiment, '⚪')} {fv.signal_sentiment}",
+        )
+
+    with col4:
+        rec_colors = {
+            "Significantly Undervalued": "🟢",
+            "Undervalued": "🟢",
+            "Fairly Valued": "⚪",
+            "Overvalued": "🟠",
+            "Significantly Overvalued": "🔴",
+        }
+        st.metric(
+            label="Assessment",
+            value=f"{rec_colors.get(fv.recommendation, '⚪')} {fv.recommendation}",
+        )
+
+    # Signal contribution breakdown
+    with st.expander("📈 Fair Value Methodology", expanded=False):
+        st.markdown(f"""
+        **Based on {fv.letter_year} Letter Signals** (as of {fv.as_of_date})
+
+        The fair value is computed by adjusting the current market price based on
+        extracted signals from the most recent shareholder letter.
+
+        **Formula:** `Fair Value = Current Price × (1 + Signal Adjustment)`
+
+        **Signal Contributions:**
+        """)
+
+        # Show contributions as a bar chart
+        contrib_df = pd.DataFrame([
+            {"Signal": k.replace("_", " ").title(), "Contribution": v}
+            for k, v in sorted(fv.signal_contributions.items(), key=lambda x: abs(x[1]), reverse=True)
+        ])
+
+        fig = px.bar(
+            contrib_df,
+            x="Contribution",
+            y="Signal",
+            orientation="h",
+            color="Contribution",
+            color_continuous_scale=["#d32f2f", "#fff9c4", "#388e3c"],
+            color_continuous_midpoint=0,
+        )
+        fig.update_layout(
+            height=250,
+            showlegend=False,
+            xaxis_title="Contribution to Adjustment",
+            yaxis_title="",
+            xaxis_tickformat=".1%",
+        )
+        st.plotly_chart(fig, use_container_width=True)
+
+        st.caption("""
+        ⚠️ **Disclaimer:** This is a demonstration model, not financial advice.
+        The fair value estimate is based solely on qualitative signals extracted
+        from shareholder letters and should not be used for investment decisions.
+        """)
+
+except Exception as e:
+    st.warning(f"Could not compute fair value: {e}")
+
+st.divider()
 
 # Sidebar
 st.sidebar.header("Filters")
