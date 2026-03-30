@@ -71,21 +71,27 @@ def fetch_price_data(
     cache_path = STOCK_DIR / "brk_b_prices.csv"
 
     # Check cache
-    if cache_path.exists() and not force_refresh:
-        cached = pd.read_csv(cache_path, index_col=0)
-        cached.index = pd.to_datetime(cached.index, utc=True).tz_localize(None)
-        last_cached = cached.index.max().date()
+    try:
+        if cache_path.exists() and not force_refresh:
+            cached = pd.read_csv(cache_path, index_col=0)
+            cached.index = pd.to_datetime(cached.index, utc=True).tz_localize(None)
+            last_cached = cached.index.max().date()
 
-        # If cache is recent enough, use it
-        if last_cached >= end - timedelta(days=3):
-            return cached
+            # If cache is recent enough, use it
+            if last_cached >= end - timedelta(days=3):
+                return cached
+    except Exception:
+        pass  # Cache read failed, fetch fresh data
 
     # Fetch from Yahoo Finance
     ticker = yf.Ticker(TICKER)
     df = ticker.history(start=start, end=end + timedelta(days=1))
 
-    # Save to cache
-    df.to_csv(cache_path)
+    # Try to save to cache (may fail on read-only filesystems like Streamlit Cloud)
+    try:
+        df.to_csv(cache_path)
+    except Exception:
+        pass  # Cache write failed, that's okay
 
     return df
 

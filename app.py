@@ -165,6 +165,8 @@ try:
 
 except Exception as e:
     st.warning(f"Could not compute fair value: {e}")
+    import traceback
+    st.code(traceback.format_exc())
 
 st.divider()
 

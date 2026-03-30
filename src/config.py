@@ -14,10 +14,13 @@ LETTERS_DIR = DATA_DIR / "letters"
 SIGNALS_DIR = DATA_DIR / "signals"
 STOCK_DIR = DATA_DIR / "stock"
 
-# Ensure directories exist
-LETTERS_DIR.mkdir(parents=True, exist_ok=True)
-SIGNALS_DIR.mkdir(parents=True, exist_ok=True)
-STOCK_DIR.mkdir(parents=True, exist_ok=True)
+# Ensure directories exist (may fail on read-only filesystems)
+try:
+    LETTERS_DIR.mkdir(parents=True, exist_ok=True)
+    SIGNALS_DIR.mkdir(parents=True, exist_ok=True)
+    STOCK_DIR.mkdir(parents=True, exist_ok=True)
+except Exception:
+    pass  # Read-only filesystem (e.g., Streamlit Cloud)
 
 
 def get_api_key() -> str | None:
