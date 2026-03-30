@@ -19,8 +19,27 @@ LETTERS_DIR.mkdir(parents=True, exist_ok=True)
 SIGNALS_DIR.mkdir(parents=True, exist_ok=True)
 STOCK_DIR.mkdir(parents=True, exist_ok=True)
 
+
+def get_api_key() -> str | None:
+    """Get Anthropic API key from environment or Streamlit secrets."""
+    # First try environment variable
+    key = os.getenv("ANTHROPIC_API_KEY")
+    if key:
+        return key
+
+    # Then try Streamlit secrets (for Streamlit Cloud)
+    try:
+        import streamlit as st
+        if hasattr(st, "secrets") and "ANTHROPIC_API_KEY" in st.secrets:
+            return st.secrets["ANTHROPIC_API_KEY"]
+    except Exception:
+        pass
+
+    return None
+
+
 # API
-ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
+ANTHROPIC_API_KEY = get_api_key()
 
 # Model settings
 MODEL = "claude-sonnet-4-20250514"
