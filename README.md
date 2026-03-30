@@ -2,10 +2,13 @@
 
 > Extract structured financial signals from Warren Buffett's shareholder letters using LLMs, then analyze correlations with stock performance.
 
+### 🚀 [Live Demo](https://berkshire-genai-signal-engine.streamlit.app)
+
 ![Dashboard Screenshot](docs/images/Dashboard.png)
 
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://berkshire-genai-signal-engine.streamlit.app)
 
 ---
 
