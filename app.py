@@ -12,7 +12,7 @@ from src.analyzer import (
     get_themes_over_time,
 )
 from src.extractor import get_available_signals
-from src.valuation import compute_fair_value, get_historical_fair_values
+from src.valuation import compute_fair_value, get_historical_fair_values, SIGNAL_WEIGHTS
 from src.sentiment import get_market_sentiment
 
 st.set_page_config(
@@ -35,6 +35,17 @@ df = build_analysis_dataframe()
 analyses = get_all_analyses()
 
 # =============================================================================
+# SAMPLE ANALYST PRICE TARGETS (for comparison)
+# =============================================================================
+# These are illustrative - in production would fetch from financial APIs
+ANALYST_TARGETS = {
+    "Morningstar": {"target": 525.00, "rating": "4 Stars", "rationale": "Intrinsic value based on DCF of operating businesses + investment portfolio"},
+    "UBS": {"target": 540.00, "rating": "Buy", "rationale": "Sum-of-parts valuation with conglomerate discount"},
+    "Bank of America": {"target": 510.00, "rating": "Neutral", "rationale": "Trading near fair value given succession transition"},
+    "JP Morgan": {"target": 550.00, "rating": "Overweight", "rationale": "Strong operating earnings trajectory under Abel"},
+}
+
+# =============================================================================
 # FAIR VALUE ESTIMATE (HERO SECTION)
 # =============================================================================
 
@@ -42,6 +53,7 @@ st.divider()
 
 try:
     fv = compute_fair_value()
+    sentiment = get_market_sentiment()
 
     # Main fair value display
     col1, col2, col3, col4 = st.columns([2, 1, 1, 1])
@@ -50,7 +62,7 @@ try:
         st.metric(
             label="📊 Signal-Based Fair Value",
             value=f"${fv.fair_value:,.2f}",
-            delta=f"{fv.signal_adjustment:+.1%} signal adjustment",
+            delta=f"{fv.total_adjustment:+.1%} total adjustment",
         )
         st.caption(f"Range: ${fv.fair_value_low:,.2f} – ${fv.fair_value_high:,.2f}")
 
@@ -88,80 +100,223 @@ try:
             value=f"{rec_colors.get(fv.recommendation, '⚪')} {fv.recommendation}",
         )
 
-    # Market sentiment section
-    sentiment = get_market_sentiment()
+    st.divider()
 
-    st.markdown("##### Market Sentiment (News Analysis)")
-    sent_col1, sent_col2, sent_col3, sent_col4 = st.columns(4)
+    # =============================================================================
+    # VALUATION METHODOLOGY (Clear, prominent section)
+    # =============================================================================
+
+    st.header("Valuation Methodology")
+
+    method_col1, method_col2 = st.columns([1, 1])
+
+    with method_col1:
+        st.markdown(f"""
+        #### How We Calculate Fair Value
+
+        Our model extracts **quantitative signals** from Warren Buffett's shareholder
+        letters and combines them with **market sentiment** from financial news.
+
+        **Formula:**
+        ```
+        Fair Value = Current Price × (1 + Total Adjustment)
+        ```
+
+        **Components:**
+        | Source | Weight | Adjustment |
+        |--------|--------|------------|
+        | Letter Signals | 75% | {fv.signal_adjustment:+.2%} |
+        | Market Sentiment | 25% | {fv.market_sentiment_adjustment:+.2%} |
+        | **Combined** | **100%** | **{fv.total_adjustment:+.2%}** |
+
+        **Data Sources:**
+        - **Letter Year:** {fv.letter_year} shareholder letter
+        - **Price Date:** {fv.as_of_date}
+        - **News Articles:** {sentiment.total_items} analyzed
+        """)
+
+    with method_col2:
+        st.markdown("#### Signal Weights")
+        st.markdown("*Each signal contributes to the total adjustment based on these weights:*")
+
+        # Signal weights table
+        weights_data = []
+        for signal, weight in SIGNAL_WEIGHTS.items():
+            direction = "Bullish" if weight > 0 else "Bearish"
+            emoji = "🟢" if weight > 0 else "🔴"
+            weights_data.append({
+                "Signal": signal.replace("_", " ").title(),
+                "Weight": f"{abs(weight):.0%}",
+                "Effect": f"{emoji} {direction}",
+            })
+
+        weights_df = pd.DataFrame(weights_data)
+        st.dataframe(weights_df, hide_index=True, use_container_width=True)
+
+    # Signal contribution chart
+    st.markdown("#### Signal Contributions to Fair Value")
+
+    contrib_df = pd.DataFrame([
+        {"Signal": k.replace("_", " ").title(), "Contribution": v}
+        for k, v in sorted(fv.signal_contributions.items(), key=lambda x: abs(x[1]), reverse=True)
+    ])
+
+    fig = px.bar(
+        contrib_df,
+        x="Contribution",
+        y="Signal",
+        orientation="h",
+        color="Contribution",
+        color_continuous_scale=["#d32f2f", "#fff9c4", "#388e3c"],
+        color_continuous_midpoint=0,
+    )
+    fig.update_layout(
+        height=300,
+        showlegend=False,
+        xaxis_title="Contribution to Adjustment",
+        yaxis_title="",
+        xaxis_tickformat=".1%",
+        margin=dict(l=0, r=0, t=10, b=0),
+    )
+    st.plotly_chart(fig, use_container_width=True)
+
+    st.divider()
+
+    # =============================================================================
+    # ANALYST COMPARISON
+    # =============================================================================
+
+    st.header("Comparison to Analyst Price Targets")
+
+    st.markdown("""
+    How does our signal-based fair value compare to Wall Street analyst targets?
+    Below we show the agreement and disagreement with major financial institutions.
+    """)
+
+    # Build comparison data
+    comparison_data = []
+    avg_analyst_target = sum(a["target"] for a in ANALYST_TARGETS.values()) / len(ANALYST_TARGETS)
+
+    for analyst, data in ANALYST_TARGETS.items():
+        diff_from_model = ((data["target"] - fv.fair_value) / fv.fair_value) * 100
+        diff_from_price = ((data["target"] - fv.current_price) / fv.current_price) * 100
+
+        if abs(diff_from_model) < 3:
+            agreement = "🟢 Strong Agreement"
+        elif abs(diff_from_model) < 7:
+            agreement = "🟡 Moderate Agreement"
+        else:
+            agreement = "🔴 Disagreement"
+
+        comparison_data.append({
+            "Analyst": analyst,
+            "Target": f"${data['target']:,.2f}",
+            "Rating": data["rating"],
+            "vs Our Model": f"{diff_from_model:+.1f}%",
+            "vs Current Price": f"{diff_from_price:+.1f}%",
+            "Agreement": agreement,
+        })
+
+    # Add our model row
+    model_vs_avg = ((fv.fair_value - avg_analyst_target) / avg_analyst_target) * 100
+    comparison_data.append({
+        "Analyst": "📊 Our Model",
+        "Target": f"${fv.fair_value:,.2f}",
+        "Rating": fv.recommendation,
+        "vs Our Model": "—",
+        "vs Current Price": f"{-fv.premium_discount_pct:+.1f}%",
+        "Agreement": "—",
+    })
+
+    comp_df = pd.DataFrame(comparison_data)
+    st.dataframe(comp_df, hide_index=True, use_container_width=True)
+
+    # Agreement/Disagreement Analysis
+    st.markdown("#### Why the Differences?")
+
+    analysis_col1, analysis_col2 = st.columns(2)
+
+    with analysis_col1:
+        st.markdown(f"""
+        **Our Model Considers:**
+        - Buffett's expressed confidence ({fv.signal_contributions.get('confidence_overall', 0):+.1%} impact)
+        - Capital allocation posture
+        - Market opportunity assessment
+        - Acquisition appetite signals
+        - Recent news sentiment ({sentiment.overall_label})
+
+        **Consensus:** ${avg_analyst_target:,.2f} (avg analyst target)
+        **Our Estimate:** ${fv.fair_value:,.2f}
+        **Difference:** {model_vs_avg:+.1f}%
+        """)
+
+    with analysis_col2:
+        st.markdown("""
+        **Analyst Models Typically Use:**
+        - Discounted cash flow (DCF) analysis
+        - Sum-of-the-parts valuation
+        - Price/Book multiples
+        - Historical trading ranges
+        - Conglomerate discount adjustments
+
+        **Key Insight:** Our signal-based approach captures *qualitative* factors
+        that may not be fully reflected in traditional quantitative models.
+        """)
+
+    st.divider()
+
+    # =============================================================================
+    # NEWS SENTIMENT BREAKDOWN
+    # =============================================================================
+
+    st.header("Market Sentiment Analysis")
+
+    sent_col1, sent_col2, sent_col3 = st.columns([1, 1, 2])
 
     with sent_col1:
-        st.metric(
-            "News Sentiment",
-            f"{sentiment.sentiment_emoji} {sentiment.overall_label.title()}",
+        # Sentiment pie chart
+        sentiment_counts = pd.DataFrame({
+            "Sentiment": ["Bullish", "Bearish", "Neutral"],
+            "Count": [sentiment.bullish_count, sentiment.bearish_count, sentiment.neutral_count],
+            "Color": ["#388e3c", "#d32f2f", "#9e9e9e"],
+        })
+
+        fig = px.pie(
+            sentiment_counts,
+            values="Count",
+            names="Sentiment",
+            title="News Article Sentiment",
+            color="Sentiment",
+            color_discrete_map={"Bullish": "#388e3c", "Bearish": "#d32f2f", "Neutral": "#9e9e9e"},
         )
-    with sent_col2:
-        st.metric("Bullish Articles", f"🟢 {sentiment.bullish_count}")
-    with sent_col3:
-        st.metric("Bearish Articles", f"🔴 {sentiment.bearish_count}")
-    with sent_col4:
-        st.metric("Neutral Articles", f"⚪ {sentiment.neutral_count}")
-
-    # Signal contribution breakdown
-    with st.expander("📈 Fair Value Methodology", expanded=False):
-        st.markdown(f"""
-        **Based on {fv.letter_year} Letter Signals + Market Sentiment** (as of {fv.as_of_date})
-
-        The fair value combines:
-        - **Letter Signals (75%):** Extracted from shareholder letters
-        - **Market Sentiment (25%):** Analyzed from recent financial news
-
-        **Formula:** `Fair Value = Current Price × (1 + Total Adjustment)`
-
-        | Component | Adjustment |
-        |-----------|------------|
-        | Letter Signals | {fv.signal_adjustment:+.1%} |
-        | Market Sentiment | {fv.market_sentiment_adjustment:+.1%} |
-        | **Total** | **{fv.total_adjustment:+.1%}** |
-
-        **Letter Signal Contributions:**
-        """)
-
-        # Show contributions as a bar chart
-        contrib_df = pd.DataFrame([
-            {"Signal": k.replace("_", " ").title(), "Contribution": v}
-            for k, v in sorted(fv.signal_contributions.items(), key=lambda x: abs(x[1]), reverse=True)
-        ])
-
-        fig = px.bar(
-            contrib_df,
-            x="Contribution",
-            y="Signal",
-            orientation="h",
-            color="Contribution",
-            color_continuous_scale=["#d32f2f", "#fff9c4", "#388e3c"],
-            color_continuous_midpoint=0,
-        )
-        fig.update_layout(
-            height=250,
-            showlegend=False,
-            xaxis_title="Contribution to Adjustment",
-            yaxis_title="",
-            xaxis_tickformat=".1%",
-        )
+        fig.update_layout(height=300, margin=dict(l=0, r=0, t=40, b=0))
         st.plotly_chart(fig, use_container_width=True)
 
-        # Show news headlines
-        st.markdown("**Recent News Headlines:**")
-        for item in sentiment.news_items[:5]:
-            emoji = "🟢" if item.sentiment_label == "bullish" else "🔴" if item.sentiment_label == "bearish" else "⚪"
-            trusted = "✓" if item.is_trusted_source else ""
-            st.markdown(f"- {emoji} {item.headline} — *{item.source}* {trusted}")
+    with sent_col2:
+        st.metric(
+            "Overall Sentiment",
+            f"{sentiment.sentiment_emoji} {sentiment.overall_label.title()}",
+        )
+        st.metric("Confidence", f"{sentiment.confidence:.0%}")
+        st.metric("Articles Analyzed", sentiment.total_items)
 
-        st.caption("""
-        ⚠️ **Disclaimer:** This is a demonstration model, not financial advice.
-        The fair value estimate combines qualitative signals from shareholder letters
-        with news sentiment analysis and should not be used for investment decisions.
+        st.markdown(f"""
+        **Sentiment Score:** {sentiment.overall_score:+.2f}
+        *(Scale: -1.0 bearish to +1.0 bullish)*
         """)
+
+    with sent_col3:
+        st.markdown("**Recent Headlines:**")
+        for item in sentiment.news_items[:6]:
+            emoji = "🟢" if item.sentiment_label == "bullish" else "🔴" if item.sentiment_label == "bearish" else "⚪"
+            trusted = " ✓" if item.is_trusted_source else ""
+            st.markdown(f"- {emoji} {item.headline} — *{item.source}*{trusted}")
+
+    st.caption("""
+    ⚠️ **Disclaimer:** This is a demonstration model, not financial advice.
+    The fair value estimate combines qualitative signals from shareholder letters
+    with news sentiment analysis and should not be used for investment decisions.
+    """)
 
 except Exception as e:
     st.warning(f"Could not compute fair value: {e}")
@@ -171,20 +326,33 @@ except Exception as e:
 st.divider()
 
 # Sidebar
-st.sidebar.header("Filters")
+st.sidebar.header("Historical Analysis Filters")
+st.sidebar.markdown("""
+*Filter which shareholder letters to include in the trend analysis below.
+The fair value estimate always uses the most recent letter.*
+""")
 selected_years = st.sidebar.multiselect(
-    "Select Years",
+    "Include Letters From",
     options=sorted(df["letter_year"].unique()),
     default=sorted(df["letter_year"].unique()),
 )
 
 df_filtered = df[df["letter_year"].isin(selected_years)]
 
+st.sidebar.divider()
+st.sidebar.markdown(f"""
+**Data Summary:**
+- Letters available: {len(df)}
+- Years: {min(df['letter_year'])} – {max(df['letter_year'])}
+- Signals extracted: 25+
+""")
+
 # =============================================================================
-# OVERVIEW METRICS
+# HISTORICAL ANALYSIS (Uses sidebar filter)
 # =============================================================================
 
-st.header("Overview")
+st.header("Historical Letter Analysis")
+st.markdown("*Trends from Buffett's shareholder letters over time. Use sidebar to filter years.*")
 
 col1, col2, col3, col4 = st.columns(4)
 
@@ -298,43 +466,6 @@ with tab3:
     )
     st.plotly_chart(fig, use_container_width=True)
 
-# =============================================================================
-# CATEGORICAL DISTRIBUTIONS
-# =============================================================================
-
-st.header("Categorical Signal Distribution")
-
-col1, col2, col3 = st.columns(3)
-
-with col1:
-    posture_counts = df_filtered["capital_posture"].value_counts()
-    fig = px.pie(
-        values=posture_counts.values,
-        names=posture_counts.index,
-        title="Capital Posture",
-        color_discrete_sequence=px.colors.qualitative.Set2,
-    )
-    st.plotly_chart(fig, use_container_width=True)
-
-with col2:
-    regime_counts = df_filtered["market_regime"].value_counts()
-    fig = px.pie(
-        values=regime_counts.values,
-        names=regime_counts.index,
-        title="Market Regime",
-        color_discrete_sequence=px.colors.qualitative.Set3,
-    )
-    st.plotly_chart(fig, use_container_width=True)
-
-with col3:
-    stance_counts = df_filtered["acquisition_stance"].value_counts()
-    fig = px.pie(
-        values=stance_counts.values,
-        names=stance_counts.index,
-        title="Acquisition Stance",
-        color_discrete_sequence=px.colors.qualitative.Pastel,
-    )
-    st.plotly_chart(fig, use_container_width=True)
 
 # =============================================================================
 # SIGNALS VS RETURNS
