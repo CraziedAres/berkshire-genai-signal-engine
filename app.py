@@ -13,6 +13,7 @@ from src.analyzer import (
 )
 from src.extractor import get_available_signals
 from src.valuation import compute_fair_value, get_historical_fair_values
+from src.sentiment import get_market_sentiment
 
 st.set_page_config(
     page_title="Berkshire Signal Engine",
@@ -87,17 +88,42 @@ try:
             value=f"{rec_colors.get(fv.recommendation, '⚪')} {fv.recommendation}",
         )
 
+    # Market sentiment section
+    sentiment = get_market_sentiment()
+
+    st.markdown("##### Market Sentiment (News Analysis)")
+    sent_col1, sent_col2, sent_col3, sent_col4 = st.columns(4)
+
+    with sent_col1:
+        st.metric(
+            "News Sentiment",
+            f"{sentiment.sentiment_emoji} {sentiment.overall_label.title()}",
+        )
+    with sent_col2:
+        st.metric("Bullish Articles", f"🟢 {sentiment.bullish_count}")
+    with sent_col3:
+        st.metric("Bearish Articles", f"🔴 {sentiment.bearish_count}")
+    with sent_col4:
+        st.metric("Neutral Articles", f"⚪ {sentiment.neutral_count}")
+
     # Signal contribution breakdown
     with st.expander("📈 Fair Value Methodology", expanded=False):
         st.markdown(f"""
-        **Based on {fv.letter_year} Letter Signals** (as of {fv.as_of_date})
+        **Based on {fv.letter_year} Letter Signals + Market Sentiment** (as of {fv.as_of_date})
 
-        The fair value is computed by adjusting the current market price based on
-        extracted signals from the most recent shareholder letter.
+        The fair value combines:
+        - **Letter Signals (75%):** Extracted from shareholder letters
+        - **Market Sentiment (25%):** Analyzed from recent financial news
 
-        **Formula:** `Fair Value = Current Price × (1 + Signal Adjustment)`
+        **Formula:** `Fair Value = Current Price × (1 + Total Adjustment)`
 
-        **Signal Contributions:**
+        | Component | Adjustment |
+        |-----------|------------|
+        | Letter Signals | {fv.signal_adjustment:+.1%} |
+        | Market Sentiment | {fv.market_sentiment_adjustment:+.1%} |
+        | **Total** | **{fv.total_adjustment:+.1%}** |
+
+        **Letter Signal Contributions:**
         """)
 
         # Show contributions as a bar chart
@@ -124,10 +150,17 @@ try:
         )
         st.plotly_chart(fig, use_container_width=True)
 
+        # Show news headlines
+        st.markdown("**Recent News Headlines:**")
+        for item in sentiment.news_items[:5]:
+            emoji = "🟢" if item.sentiment_label == "bullish" else "🔴" if item.sentiment_label == "bearish" else "⚪"
+            trusted = "✓" if item.is_trusted_source else ""
+            st.markdown(f"- {emoji} {item.headline} — *{item.source}* {trusted}")
+
         st.caption("""
         ⚠️ **Disclaimer:** This is a demonstration model, not financial advice.
-        The fair value estimate is based solely on qualitative signals extracted
-        from shareholder letters and should not be used for investment decisions.
+        The fair value estimate combines qualitative signals from shareholder letters
+        with news sentiment analysis and should not be used for investment decisions.
         """)
 
 except Exception as e:

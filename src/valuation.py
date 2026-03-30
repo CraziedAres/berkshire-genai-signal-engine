@@ -43,6 +43,9 @@ SIGNAL_WEIGHTS = {
 # Maximum adjustment from signals (e.g., 0.15 = +/- 15%)
 MAX_SIGNAL_ADJUSTMENT = 0.15
 
+# Market sentiment weight (how much external sentiment affects fair value)
+MARKET_SENTIMENT_WEIGHT = 0.25  # 25% weight to market sentiment
+
 # Fair value range width (e.g., 0.10 = +/- 10% around point estimate)
 RANGE_WIDTH = 0.10
 
@@ -62,11 +65,17 @@ class FairValueEstimate:
     fair_value_high: float
 
     # Implied signals
-    signal_adjustment: float  # e.g., +0.05 = 5% premium
+    signal_adjustment: float  # e.g., +0.05 = 5% premium from letter signals
+    market_sentiment_adjustment: float  # adjustment from news sentiment
+    total_adjustment: float  # combined adjustment
     premium_discount_pct: float  # e.g., -3% = trading at 3% discount
 
     # Signal breakdown
     signal_contributions: dict[str, float]
+
+    # Market sentiment
+    market_sentiment_score: float  # -1 to +1
+    market_sentiment_label: str  # bullish/bearish/neutral
 
     # Metadata
     letter_year: int
@@ -195,15 +204,21 @@ def get_current_price() -> tuple[float, date]:
     return latest["Close"], df.index[-1].date()
 
 
-def compute_fair_value(letter_year: int | None = None) -> FairValueEstimate:
-    """Compute fair value estimate based on latest (or specified) letter signals.
+def compute_fair_value(
+    letter_year: int | None = None,
+    include_sentiment: bool = True,
+) -> FairValueEstimate:
+    """Compute fair value estimate based on letter signals and market sentiment.
 
     Args:
         letter_year: Specific letter year to use, or None for most recent
+        include_sentiment: Whether to incorporate market sentiment
 
     Returns:
         FairValueEstimate with all components
     """
+    from .sentiment import get_market_sentiment
+
     # Get available signals
     available = get_available_signals()
     if not available:
@@ -221,14 +236,38 @@ def compute_fair_value(letter_year: int | None = None) -> FairValueEstimate:
     # Extract valuation-relevant signals
     signals = extract_valuation_signals(analysis)
 
-    # Compute adjustment
-    adjustment, contributions = compute_signal_adjustment(signals)
+    # Compute letter signal adjustment
+    letter_adjustment, contributions = compute_signal_adjustment(signals)
+
+    # Get market sentiment
+    sentiment = get_market_sentiment(use_sample=True)
+    sentiment_adjustment = 0.0
+
+    if include_sentiment:
+        # Market sentiment contributes up to +/- 5% (scaled by confidence)
+        max_sentiment_adj = 0.05
+        sentiment_adjustment = (
+            sentiment.overall_score *
+            max_sentiment_adj *
+            sentiment.confidence
+        )
+
+    # Combine adjustments (weighted)
+    # Letter signals: 75%, Market sentiment: 25%
+    total_adjustment = (
+        letter_adjustment * (1 - MARKET_SENTIMENT_WEIGHT) +
+        sentiment_adjustment * MARKET_SENTIMENT_WEIGHT * 3  # Scale up sentiment contrib
+    )
+
+    # Clamp total adjustment
+    total_adjustment = max(-MAX_SIGNAL_ADJUSTMENT,
+                          min(MAX_SIGNAL_ADJUSTMENT, total_adjustment))
 
     # Get current price
     current_price, as_of_date = get_current_price()
 
     # Compute fair value
-    fair_value = current_price * (1 + adjustment)
+    fair_value = current_price * (1 + total_adjustment)
     fair_value_low = fair_value * (1 - RANGE_WIDTH)
     fair_value_high = fair_value * (1 + RANGE_WIDTH)
 
@@ -240,9 +279,13 @@ def compute_fair_value(letter_year: int | None = None) -> FairValueEstimate:
         fair_value=fair_value,
         fair_value_low=fair_value_low,
         fair_value_high=fair_value_high,
-        signal_adjustment=adjustment,
+        signal_adjustment=letter_adjustment,
+        market_sentiment_adjustment=sentiment_adjustment,
+        total_adjustment=total_adjustment,
         premium_discount_pct=premium_discount,
         signal_contributions=contributions,
+        market_sentiment_score=sentiment.overall_score,
+        market_sentiment_label=sentiment.overall_label,
         letter_year=letter_year,
         as_of_date=as_of_date,
     )
