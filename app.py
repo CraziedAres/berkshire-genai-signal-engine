@@ -664,6 +664,5 @@ st.markdown("""
 `Claude API` · `Streamlit` · `Plotly` · `Pydantic` · `yfinance` · `Python 3.9+`
 
 ---
-*The point: GenAI doesn't just analyze text — it writes the analyzer too.
-[View source on GitHub](https://github.com/CraziedAres/Project-Berkshire)*
+*[View source on GitHub](https://github.com/CraziedAres/Project-Berkshire)*
 """)
