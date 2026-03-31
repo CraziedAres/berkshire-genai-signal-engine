@@ -653,22 +653,14 @@ except Exception as e:
 
 st.divider()
 
-# Sidebar
-selected_years = st.sidebar.multiselect(
-    "Filter Years",
-    options=sorted(df["letter_year"].unique()),
-    default=sorted(df["letter_year"].unique()),
-    label_visibility="collapsed",
-)
-
-df_filtered = df[df["letter_year"].isin(selected_years)]
+df_filtered = df
 
 # =============================================================================
-# HISTORICAL ANALYSIS (Uses sidebar filter)
+# HISTORICAL ANALYSIS
 # =============================================================================
 
 st.header("Historical Letter Analysis")
-st.markdown("*Trends from Buffett's shareholder letters over time. Use sidebar to filter years.*")
+st.markdown("*Trends from Buffett's shareholder letters over time.*")
 
 hist_col1, hist_col2 = st.columns(2)
 hist_col3, hist_col4 = st.columns(2)
@@ -1121,7 +1113,7 @@ st.header("Major Themes")
 
 themes_df = get_themes_over_time()
 if not themes_df.empty:
-    themes_filtered = themes_df[themes_df["year"].isin(selected_years)]
+    themes_filtered = themes_df
 
     # Theme prominence heatmap
     theme_pivot = themes_filtered.pivot_table(
@@ -1146,8 +1138,6 @@ if not themes_df.empty:
 st.header("Letter Details")
 
 for analysis in sorted(analyses, key=lambda x: x.metadata.letter_year, reverse=True):
-    if analysis.metadata.letter_year not in selected_years:
-        continue
 
     with st.expander(f"📄 {analysis.metadata.letter_year} Letter"):
         # Scores grid (2x2 for mobile)
