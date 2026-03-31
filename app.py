@@ -60,51 +60,49 @@ st.divider()
 try:
     fv = compute_fair_value()
     sentiment = get_market_sentiment()
+    gv = compute_graham_valuation()
+    bv = compute_buffett_valuation()
 
-    # Main fair value display
-    col1, col2, col3, col4 = st.columns([2, 1, 1, 1])
+    # Hero: 4 prices side by side
+    hero1, hero2, hero3, hero4 = st.columns(4)
 
-    with col1:
-        st.metric(
-            label="📊 Signal-Based Fair Value",
-            value=f"${fv.fair_value:,.2f}",
-            delta=f"{fv.total_adjustment:+.1%} total adjustment",
-        )
-        st.caption(f"Range: ${fv.fair_value_low:,.2f} – ${fv.fair_value_high:,.2f}")
-
-    with col2:
+    with hero1:
         st.metric(
             label="Current Price",
             value=f"${fv.current_price:,.2f}",
-            delta=f"{-fv.premium_discount_pct:+.1f}% vs fair value",
-            delta_color="inverse",
         )
 
-    with col3:
-        sentiment_colors = {
-            "Bullish": "🟢",
-            "Slightly Bullish": "🟢",
-            "Neutral": "⚪",
-            "Slightly Bearish": "🟠",
-            "Bearish": "🔴",
-        }
+    with hero2:
         st.metric(
-            label="Signal Sentiment",
-            value=f"{sentiment_colors.get(fv.signal_sentiment, '⚪')} {fv.signal_sentiment}",
+            label="📊 Signal-Based",
+            value=f"${fv.fair_value:,.2f}",
+            delta=f"{-fv.premium_discount_pct:+.1f}% vs current",
+            delta_color="normal",
         )
 
-    with col4:
-        rec_colors = {
-            "Significantly Undervalued": "🟢",
-            "Undervalued": "🟢",
-            "Fairly Valued": "⚪",
-            "Overvalued": "🟠",
-            "Significantly Overvalued": "🔴",
-        }
-        st.metric(
-            label="Assessment",
-            value=f"{rec_colors.get(fv.recommendation, '⚪')} {fv.recommendation}",
-        )
+    with hero3:
+        if bv.fair_value:
+            bv_delta = ((bv.fair_value - fv.current_price) / fv.current_price) * 100
+            st.metric(
+                label="🦅 Buffett Model",
+                value=f"${bv.fair_value:,.2f}",
+                delta=f"{bv_delta:+.1f}% vs current",
+                delta_color="normal",
+            )
+        else:
+            st.metric(label="🦅 Buffett Model", value="N/A")
+
+    with hero4:
+        if gv.composite_fair_value:
+            gv_delta = ((gv.composite_fair_value - fv.current_price) / fv.current_price) * 100
+            st.metric(
+                label="📖 Graham Model",
+                value=f"${gv.composite_fair_value:,.2f}",
+                delta=f"{gv_delta:+.1f}% vs current",
+                delta_color="normal",
+            )
+        else:
+            st.metric(label="📖 Graham Model", value="N/A")
 
     st.divider()
 
@@ -283,8 +281,6 @@ try:
     # --- Graham Model ---
     with graham_col:
         try:
-            gv = compute_graham_valuation()
-
             st.subheader("📖 Graham – The Intelligent Investor")
 
             if gv.composite_fair_value is not None:
@@ -354,8 +350,6 @@ try:
     # --- Buffett Decisions Model ---
     with buffett_col:
         try:
-            bv = compute_buffett_valuation()
-
             st.subheader("🦅 Buffett – Revealed Preferences")
 
             st.metric(
@@ -419,6 +413,33 @@ try:
                 **Buyback Zone:** When the current P/B ({bv.current_pb:.2f}x) is near the
                 historical buyback P/B ({bv.avg_buyback_pb:.2f}x), we say the stock is
                 "in Buffett's buyback zone" — the range where he's historically been a buyer.
+
+                ---
+
+                **⚠️ A Note on Book Value & GAAP Accounting**
+
+                Buffett himself has cautioned against over-relying on book value. In his
+                2018 letter, he stopped using book value growth as Berkshire's key metric,
+                calling it "far less relevant than it once was." Why?
+
+                - **GAAP understates operating businesses.** Wholly-owned subsidiaries like
+                  GEICO are carried at acquisition cost minus depreciation — their true
+                  economic value is vastly higher than what the balance sheet shows.
+                - **GAAP overstates earnings volatility.** Since 2018, GAAP requires
+                  unrealized investment gains/losses in net income (ASC 320). Berkshire's
+                  reported earnings can swing by billions based on stock market moves that
+                  have nothing to do with business performance. Buffett calls these figures
+                  "wildly misleading."
+                - **Float is an asset, not a liability.** Insurance float (~$170B) appears
+                  as a liability under GAAP, but Berkshire's profitable underwriting means
+                  this is effectively costless capital for investment.
+                - **"Owner Earnings" > Net Income.** Buffett prefers owner earnings
+                  (net income + depreciation - maintenance capex) as the true measure of
+                  earning power.
+
+                We use P/B as a *proxy* because it's the metric with the longest track record
+                of correlating with Buffett's buyback decisions — even if he'd tell you the
+                real math is more nuanced.
                 """)
 
         except Exception as e:
@@ -429,8 +450,8 @@ try:
     st.subheader("Three-Model Comparison")
 
     try:
-        gv_val = gv.composite_fair_value if 'gv' in dir() and gv.composite_fair_value else None
-        bv_val = bv.fair_value if 'bv' in dir() else None
+        gv_val = gv.composite_fair_value if gv.composite_fair_value else None
+        bv_val = bv.fair_value if bv.fair_value else None
 
         comparison_rows = [
             {
