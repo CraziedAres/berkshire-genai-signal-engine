@@ -12,7 +12,13 @@ from src.analyzer import (
     get_themes_over_time,
 )
 from src.extractor import get_available_signals
-from src.valuation import compute_fair_value, get_historical_fair_values, SIGNAL_WEIGHTS
+from src.valuation import (
+    compute_fair_value,
+    get_historical_fair_values,
+    SIGNAL_WEIGHTS,
+    compute_graham_valuation,
+    compute_buffett_valuation,
+)
 from src.sentiment import get_market_sentiment
 
 st.set_page_config(
@@ -262,6 +268,172 @@ try:
         **Key Insight:** Our signal-based approach captures *qualitative* factors
         that may not be fully reflected in traditional quantitative models.
         """)
+
+    st.divider()
+
+    # =============================================================================
+    # GRAHAM & BUFFETT ALTERNATIVE VALUATIONS
+    # =============================================================================
+
+    st.header("Alternative Valuation Models")
+    st.markdown("*Two additional fair value estimates using fundamentally different approaches.*")
+
+    graham_col, buffett_col = st.columns(2)
+
+    # --- Graham Model ---
+    with graham_col:
+        try:
+            gv = compute_graham_valuation()
+
+            st.subheader("📖 Graham – The Intelligent Investor")
+
+            if gv.composite_fair_value is not None:
+                st.metric(
+                    "Graham Fair Value",
+                    f"${gv.composite_fair_value:,.2f}",
+                    delta=f"{((gv.current_price / gv.composite_fair_value) - 1):+.1%} vs current",
+                    delta_color="inverse",
+                )
+            else:
+                st.metric("Graham Fair Value", "N/A")
+
+            st.markdown(f"""
+            **Graham Number:** {f'${gv.graham_number:,.2f}' if gv.graham_number else 'N/A'}
+            *sqrt(22.5 × EPS × Book Value)*
+
+            **Growth Formula:** {f'${gv.graham_growth_value:,.2f}' if gv.graham_growth_value else 'N/A'}
+            *EPS × (8.5 + 2g) × 4.4/Y*
+
+            **Margin of Safety Price:** {f'${gv.margin_of_safety_price:,.2f}' if gv.margin_of_safety_price else 'N/A'}
+            *Buy below this for 33% margin*
+            """)
+
+            st.markdown("**Graham Checklist**")
+            checks = {
+                f"P/E < 15 ({gv.trailing_pe:.1f})" if gv.trailing_pe else "P/E < 15": gv.pe_passes,
+                f"P/B < 1.5 ({gv.price_to_book:.2f})" if gv.price_to_book else "P/B < 1.5": gv.pb_passes,
+                "P/E × P/B < 22.5": gv.pe_pb_passes,
+                "Positive Earnings": gv.positive_earnings,
+            }
+            for label, passed in checks.items():
+                st.markdown(f"{'✅' if passed else '❌'} {label}")
+
+            st.markdown(f"**Score:** {gv.checklist_score} | **Verdict:** {gv.recommendation}")
+
+        except Exception as e:
+            st.warning(f"Graham valuation unavailable: {e}")
+
+    # --- Buffett Decisions Model ---
+    with buffett_col:
+        try:
+            bv = compute_buffett_valuation()
+
+            st.subheader("🦅 Buffett – Revealed Preferences")
+
+            st.metric(
+                "Buffett Fair Value",
+                f"${bv.fair_value:,.2f}",
+                delta=f"{((bv.current_price / bv.fair_value) - 1):+.1%} vs current",
+                delta_color="inverse",
+            )
+            st.caption(f"Range: ${bv.fair_value_low:,.2f} – ${bv.fair_value_high:,.2f}")
+
+            st.markdown(f"""
+            **Implied Fair P/B:** {bv.implied_fair_pb:.2f}x
+            *Weighted from 6 years of buyback decisions*
+
+            **Current P/B:** {f'{bv.current_pb:.2f}x' if bv.current_pb else 'N/A'}
+
+            **Book Value/Share:** {f'${bv.book_value_per_share:,.2f}' if bv.book_value_per_share else 'N/A'}
+            """)
+
+            st.markdown("**Decision Pattern Signals**")
+            signal_emojis = {
+                "Aggressive Buyer": "🟢", "Selective Buyer": "🟡", "Paused": "🔴",
+                "Deploying": "🟢", "Ready to Deploy": "🟡", "Holding": "🟠", "Hoarding": "🔴",
+                "Actively Hunting": "🟢", "Opportunistic": "🟡", "Patient": "🟠", "Inactive": "🔴",
+            }
+            st.markdown(f"- {signal_emojis.get(bv.buyback_signal, '⚪')} **Buyback:** {bv.buyback_signal}")
+            st.markdown(f"- {signal_emojis.get(bv.cash_signal, '⚪')} **Cash:** {bv.cash_signal}")
+            st.markdown(f"- {signal_emojis.get(bv.acquisition_signal, '⚪')} **Acquisitions:** {bv.acquisition_signal}")
+
+            st.markdown(f"**Zone:** {bv.current_vs_buyback_zone}")
+            st.markdown(f"**Verdict:** {bv.recommendation}")
+
+        except Exception as e:
+            st.warning(f"Buffett valuation unavailable: {e}")
+
+    # --- Three-Model Comparison ---
+    st.divider()
+    st.subheader("Three-Model Comparison")
+
+    try:
+        gv_val = gv.composite_fair_value if 'gv' in dir() and gv.composite_fair_value else None
+        bv_val = bv.fair_value if 'bv' in dir() else None
+
+        comparison_rows = [
+            {
+                "Model": "📊 Signal-Based (Letters + News)",
+                "Fair Value": f"${fv.fair_value:,.2f}",
+                "vs Current Price": f"{-fv.premium_discount_pct:+.1f}%",
+                "Method": "NLP signal extraction from shareholder letters + market sentiment",
+                "Verdict": fv.recommendation,
+            },
+        ]
+        if gv_val:
+            comparison_rows.append({
+                "Model": "📖 Graham (Intelligent Investor)",
+                "Fair Value": f"${gv_val:,.2f}",
+                "vs Current Price": f"{((gv_val - fv.current_price) / fv.current_price * 100):+.1f}%",
+                "Method": "Graham Number + Growth Formula (earnings × book value)",
+                "Verdict": gv.recommendation,
+            })
+        if bv_val:
+            comparison_rows.append({
+                "Model": "🦅 Buffett (Revealed Preferences)",
+                "Fair Value": f"${bv_val:,.2f}",
+                "vs Current Price": f"{((bv_val - fv.current_price) / fv.current_price * 100):+.1f}%",
+                "Method": "Historical buyback patterns → implied fair P/B × book value",
+                "Verdict": bv.recommendation,
+            })
+
+        comp_models_df = pd.DataFrame(comparison_rows)
+        st.dataframe(comp_models_df, hide_index=True, use_container_width=True)
+
+        # Visual comparison bar chart
+        chart_data = [{"Model": "Signal-Based", "Fair Value": fv.fair_value}]
+        if gv_val:
+            chart_data.append({"Model": "Graham", "Fair Value": gv_val})
+        if bv_val:
+            chart_data.append({"Model": "Buffett", "Fair Value": bv_val})
+        chart_data.append({"Model": "Current Price", "Fair Value": fv.current_price})
+
+        chart_df = pd.DataFrame(chart_data)
+        fig = px.bar(
+            chart_df,
+            x="Model",
+            y="Fair Value",
+            color="Model",
+            color_discrete_sequence=["#1976D2", "#388e3c", "#F57C00", "#9e9e9e"],
+            title="Fair Value Estimates by Model",
+        )
+        fig.update_layout(
+            showlegend=False,
+            yaxis_title="Price ($)",
+            yaxis_tickformat="$,.0f",
+            height=350,
+            margin=dict(l=0, r=0, t=40, b=0),
+        )
+        # Add current price line
+        fig.add_hline(
+            y=fv.current_price,
+            line_dash="dash",
+            line_color="red",
+            annotation_text=f"Current: ${fv.current_price:,.2f}",
+        )
+        st.plotly_chart(fig, use_container_width=True)
+    except Exception:
+        pass  # Comparison chart is optional
 
     st.divider()
 
