@@ -866,20 +866,20 @@ about_col1, about_col2, about_col3 = st.columns(3)
 
 with about_col1:
     st.markdown("#### Build Metrics")
-    st.metric("Total Build Time", "~2.5 hours")
-    st.metric("Python Lines of Code", "2,964")
-    st.metric("Total Project Lines", "~3,870")
+    st.metric("Total Build Time", "~3 hours")
+    st.metric("Python Lines of Code", "3,603")
+    st.metric("Total Project Lines", "~4,500")
 
 with about_col2:
     st.markdown("#### Git Stats")
-    st.metric("Commits", "16")
-    st.metric("Total Insertions", "4,614")
+    st.metric("Commits", "20")
+    st.metric("Total Insertions", "5,150")
     st.metric("Source Files", "14 Python + configs")
 
 with about_col3:
     st.markdown("#### Productivity")
-    st.metric("Est. Manual Coding Time", "20+ hours")
-    st.metric("Speedup vs Manual", "6–10x")
+    st.metric("Est. Manual Coding Time", "25+ hours")
+    st.metric("Speedup vs Manual", "8–10x")
     st.metric("Deployed To", "Streamlit Cloud")
 
 st.markdown("""
@@ -892,6 +892,7 @@ st.markdown("""
 | **1:00 – 1:30** | Fair value model — signal-based valuation, market sentiment from news |
 | **1:30 – 2:00** | Dashboard — Streamlit app with Plotly charts, tabs, correlation analysis |
 | **2:00 – 2:30** | Polish — analyst comparison, methodology section, deployment to Streamlit Cloud |
+| **2:30 – 3:00** | Graham & Buffett valuation models, three-model comparison, methodology docs |
 
 #### Tech Stack
 `Claude API` · `Streamlit` · `Plotly` · `Pydantic` · `yfinance` · `Python 3.9+`
