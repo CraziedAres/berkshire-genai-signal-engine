@@ -320,6 +320,34 @@ try:
 
             st.markdown(f"**Score:** {gv.checklist_score} | **Verdict:** {gv.recommendation}")
 
+            with st.expander("📐 Graham Methodology"):
+                st.markdown(f"""
+                Benjamin Graham's *The Intelligent Investor* (1949) introduced the
+                concept of **intrinsic value** and **margin of safety** — buying stocks
+                only when they trade well below what they're worth.
+
+                **Two valuation methods:**
+
+                **1. Graham Number** = √(22.5 × EPS × BVPS)
+                - Combines earnings power (P/E ≤ 15) with asset backing (P/B ≤ 1.5)
+                - 22.5 = 15 × 1.5 — Graham's maximum acceptable product
+                - For BRK-B: √(22.5 × ${gv.earnings_per_share:.2f} × ${gv.book_value_per_share:,.2f}) = **${gv.graham_number:,.2f}**
+
+                **2. Growth Formula** = EPS × (8.5 + 2g) × 4.4/Y
+                - 8.5 = fair P/E for a zero-growth company
+                - g = {gv.earnings_growth_rate:.1f}% expected annual growth (7-10yr horizon)
+                - 4.4 = AAA bond yield when Graham wrote the formula (1962)
+                - Y = ~5.0% current AAA corporate bond yield
+                - For BRK-B: ${gv.earnings_per_share:.2f} × (8.5 + 2×{gv.earnings_growth_rate:.1f}) × 4.4/5.0 = **${gv.graham_growth_value:,.2f}**
+
+                **Margin of Safety:** Graham insisted on buying at ≤ 67% of intrinsic
+                value. At ${gv.margin_of_safety_price:,.2f}, you'd have his full 33% margin.
+
+                **Checklist** tests whether BRK-B meets Graham's defensive investor criteria:
+                adequate size, strong financial condition, earnings stability, and
+                moderate P/E and P/B ratios.
+                """)
+
         except Exception as e:
             st.warning(f"Graham valuation unavailable: {e}")
 
@@ -359,6 +387,39 @@ try:
 
             st.markdown(f"**Zone:** {bv.current_vs_buyback_zone}")
             st.markdown(f"**Verdict:** {bv.recommendation}")
+
+            with st.expander("🔍 Buffett Methodology"):
+                st.markdown(f"""
+                Rather than using a formula, this model asks: **at what price has Buffett
+                himself been willing to buy Berkshire stock?**
+
+                Buffett's own buyback decisions are the strongest signal of what he
+                considers fair value — he's spending shareholders' money, and he's said
+                he only buys back when the price is "below Berkshire's intrinsic value."
+
+                **How it works:**
+
+                **1. Historical Buyback Analysis (2020–2025)**
+                - We extract `buyback_enthusiasm` from each year's shareholder letter
+                - Cross-reference with the approximate P/B ratio at the time
+                - Weight recent years more heavily (2024-2025 = 25% each, earlier years less)
+                - Result: a **weighted average P/B** at which Buffett buys = {bv.avg_buyback_pb:.2f}x
+
+                **2. Current Posture Adjustment**
+                - Current capital posture (`{bv.cash_signal}`) shifts the implied fair P/B
+                - Acquisition stance (`{bv.acquisition_signal}`) provides additional signal
+                - If Buffett is deploying capital → he sees value → fair P/B goes up
+                - If hoarding cash → market is expensive → fair P/B goes down
+
+                **3. Fair Value Calculation**
+                - Implied Fair P/B: **{bv.implied_fair_pb:.2f}x**
+                - Book Value/Share: **${bv.book_value_per_share:,.2f}**
+                - Fair Value = {bv.implied_fair_pb:.2f} × ${bv.book_value_per_share:,.2f} = **${bv.fair_value:,.2f}**
+
+                **Buyback Zone:** When the current P/B ({bv.current_pb:.2f}x) is near the
+                historical buyback P/B ({bv.avg_buyback_pb:.2f}x), we say the stock is
+                "in Buffett's buyback zone" — the range where he's historically been a buyer.
+                """)
 
         except Exception as e:
             st.warning(f"Buffett valuation unavailable: {e}")
