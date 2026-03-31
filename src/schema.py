@@ -84,7 +84,7 @@ class DocumentMetadata(BaseModel):
         None,
         description="Approximate release date (late Feb of year+1)",
     )
-    author: Literal["warren_buffett", "warren_buffett_charlie_munger"] = Field(
+    author: Literal["warren_buffett", "warren_buffett_charlie_munger", "greg_abel"] = Field(
         "warren_buffett",
         description="Primary author(s)",
     )
