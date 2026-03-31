@@ -1025,6 +1025,16 @@ try:
 except Exception as e:
     st.warning(f"Statistical tests unavailable: {e}")
 
+st.caption("""
+**A note on interpretation:** Signals tend to show stronger predictive power at longer
+horizons (e.g. 90-day) than shorter ones. This is expected — Buffett's letters convey
+fundamental, structural views on capital allocation, market conditions, and business
+quality that take time to manifest in price. A 30-day window captures mostly noise,
+while 90 days allows these slow-moving signals to play out. That said, with a small
+sample of letters, even significant results should be read as directionally encouraging
+rather than definitive.
+""")
+
 st.divider()
 
 # =============================================================================
