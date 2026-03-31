@@ -653,27 +653,15 @@ except Exception as e:
 
 st.divider()
 
-# Sidebar
-st.sidebar.header("Historical Analysis Filters")
-st.sidebar.markdown("""
-*Filter which shareholder letters to include in the trend analysis below.
-The fair value estimate always uses the most recent letter.*
-""")
+# Sidebar — keep minimal for mobile
+st.sidebar.header("Filters")
 selected_years = st.sidebar.multiselect(
-    "Include Letters From",
+    "Letters",
     options=sorted(df["letter_year"].unique()),
     default=sorted(df["letter_year"].unique()),
 )
 
 df_filtered = df[df["letter_year"].isin(selected_years)]
-
-st.sidebar.divider()
-st.sidebar.markdown(f"""
-**Data Summary:**
-- Letters available: {len(df)}
-- Years: {min(df['letter_year'])} – {max(df['letter_year'])}
-- Signals extracted: 25+
-""")
 
 # =============================================================================
 # HISTORICAL ANALYSIS (Uses sidebar filter)
