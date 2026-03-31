@@ -27,6 +27,8 @@ from src.statistics import (
     run_all_regressions,
     compute_predictive_verdict,
 )
+from src.efficacy import compute_efficacy_summary, compute_conditional_returns
+from src.reliability import compute_reliability_summary
 
 # Shared Plotly layout defaults for mobile-friendly charts
 PLOTLY_MOBILE_LAYOUT = dict(
@@ -850,6 +852,92 @@ else:
     st.info("No return data available yet (need stock data for post-letter periods)")
 
 # =============================================================================
+# SIGNAL EFFICACY: Do these signals matter?
+# =============================================================================
+
+st.header("Do These Signals Actually Matter?")
+st.markdown("*The key question: do high-signal years produce better returns than low-signal years?*")
+
+try:
+    efficacy = compute_efficacy_summary(df_filtered)
+
+    if efficacy.get("available"):
+        best_signal_name = efficacy["best_signal"].replace("_", " ").title()
+        best_horizon = efficacy["best_horizon"]
+
+        # Hero metric: the headline finding
+        eff_col1, eff_col2 = st.columns(2)
+
+        with eff_col1:
+            st.metric(
+                f"Best Signal: {best_signal_name}",
+                f"{efficacy['best_spread']:+.1%} spread",
+                help=f"Difference in avg {best_horizon} return between high-signal and low-signal letters",
+            )
+            st.markdown(
+                f"When **{best_signal_name}** is above its median: "
+                f"avg {best_horizon} return = **{efficacy['best_high_return']:+.1%}**. "
+                f"Below median: **{efficacy['best_low_return']:+.1%}**."
+            )
+
+        with eff_col2:
+            strat = efficacy.get("strategy")
+            if strat:
+                st.metric(
+                    "Signal-Based Strategy",
+                    f"{strat['strategy_avg_return']:+.1%} avg return",
+                    delta=f"{strat['excess_return']:+.1%} vs buy-and-hold",
+                    delta_color="normal",
+                )
+                st.markdown(
+                    f"**Hit rate:** {strat['hit_rate']:.0%} of invested periods positive | "
+                    f"**Sharpe:** {strat['sharpe_ratio']:.2f}"
+                )
+
+        # Conditional returns for top signals
+        st.divider()
+        st.subheader("High vs Low Signal Returns")
+        st.markdown(
+            f"*For each signal, we split at the median and compare average "
+            f"**{best_horizon}** forward returns.*"
+        )
+
+        top_signals = efficacy.get("top_signals", [])
+        if top_signals:
+            eff_chart_data = []
+            for s in top_signals:
+                label = s["signal"].replace("_", " ").title()
+                eff_chart_data.append({"Signal": label, "Cohort": "High Signal", "Avg Return": s["high_avg_return"]})
+                eff_chart_data.append({"Signal": label, "Cohort": "Low Signal", "Avg Return": s["low_avg_return"]})
+
+            eff_chart_df = pd.DataFrame(eff_chart_data)
+            fig = px.bar(
+                eff_chart_df,
+                x="Signal",
+                y="Avg Return",
+                color="Cohort",
+                barmode="group",
+                color_discrete_map={"High Signal": "#388e3c", "Low Signal": "#d32f2f"},
+                title=f"Average {best_horizon} Return: High vs Low Signal Cohorts",
+            )
+            fig.update_layout(
+                yaxis_tickformat=".1%",
+                yaxis_title=f"Avg {best_horizon} Forward Return",
+                height=350,
+                margin=dict(l=10, r=10, t=40, b=40),
+            )
+            fig.add_hline(y=0, line_dash="dash", line_color="gray", line_width=0.5)
+            st.plotly_chart(fig, use_container_width=True)
+
+    else:
+        st.info("Not enough return data to evaluate signal efficacy.")
+
+except Exception as e:
+    st.warning(f"Signal efficacy analysis unavailable: {e}")
+
+st.divider()
+
+# =============================================================================
 # STATISTICAL TESTS: Do signals predict returns?
 # =============================================================================
 
@@ -1131,6 +1219,90 @@ for analysis in sorted(analyses, key=lambda x: x.metadata.letter_year, reverse=T
         for excerpt in analysis.notable_excerpts:
             st.markdown(f"> {excerpt.quote}")
             st.caption(f"*Signal: {excerpt.signal_type} — {excerpt.significance}*")
+
+# =============================================================================
+# EXTRACTION RELIABILITY
+# =============================================================================
+
+st.divider()
+st.header("Extraction Reliability")
+st.markdown("""
+*How stable are these signals? If Claude extracts the same letter twice, does it give the
+same answer? This section reports on multi-run consistency testing.*
+""")
+
+try:
+    reliability = compute_reliability_summary()
+
+    if reliability.get("available"):
+        rel_col1, rel_col2 = st.columns(2)
+
+        with rel_col1:
+            grade_colors = {"A": "🟢", "B": "🟢", "C": "🟡", "D": "🔴"}
+            grade_emoji = grade_colors.get(reliability["grade"], "⚪")
+            st.metric(
+                "Consistency Grade",
+                f"{grade_emoji} {reliability['grade']} — {reliability['grade_label']}",
+            )
+            st.caption(reliability["grade_detail"])
+
+        with rel_col2:
+            st.metric("Avg Signal Variance", f"±{reliability['avg_cv']:.1%}")
+            st.metric(
+                "Test Coverage",
+                f"{len(reliability['years_tested'])} letters, "
+                f"{reliability['runs_per_year']} runs each",
+            )
+
+        # Per-signal variance table
+        per_signal = reliability.get("per_signal")
+        if per_signal is not None and not per_signal.empty:
+            with st.expander("Signal-Level Variance Details"):
+                display_rel = per_signal.copy()
+                display_rel["signal"] = display_rel["signal"].str.replace("_", " ").str.title()
+                display_rel = display_rel.rename(columns={
+                    "signal": "Signal",
+                    "avg_cv": "Avg CV",
+                    "avg_std": "Avg Std Dev",
+                    "avg_range": "Avg Range",
+                })
+
+                st.dataframe(
+                    display_rel.style.background_gradient(
+                        cmap="RdYlGn_r", subset=["Avg CV"], vmin=0, vmax=0.3,
+                    ).format({"Avg CV": "{:.3f}", "Avg Std Dev": "{:.4f}", "Avg Range": "{:.4f}"}),
+                    use_container_width=True,
+                )
+
+                st.markdown(
+                    f"**Most stable:** {', '.join(s.replace('_', ' ').title() for s in reliability['most_stable'][:3])} | "
+                    f"**Least stable:** {', '.join(s.replace('_', ' ').title() for s in reliability['least_stable'][:3])}"
+                )
+
+    else:
+        st.info(
+            "No reliability tests have been run yet. Run "
+            "`python scripts/test_reliability.py` to extract the same letter "
+            "multiple times and measure signal consistency."
+        )
+
+        st.markdown("""
+        **Why this matters:** LLM-based extraction introduces a source of variance that
+        traditional NLP pipelines don't have. Measuring this is a sign of methodological rigor.
+
+        **What the test does:**
+        1. Takes a single shareholder letter
+        2. Runs Claude extraction 5+ times with identical prompts
+        3. Measures the standard deviation of each numeric signal across runs
+        4. Reports a coefficient of variation (CV) — lower is better
+
+        **Expected results:** Structural signals (confidence, uncertainty) tend to be very
+        stable (CV < 5%), while nuanced judgments (opportunity richness, speculation warning)
+        may show more variation.
+        """)
+
+except Exception as e:
+    st.warning(f"Reliability analysis unavailable: {e}")
 
 # =============================================================================
 # ABOUT THIS PROJECT
