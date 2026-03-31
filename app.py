@@ -1322,19 +1322,19 @@ about_col3, _ = st.columns(2)
 
 with about_col1:
     st.markdown("#### Build Metrics")
-    st.metric("Total Build Time", "~3 hours")
-    st.metric("Python Lines of Code", "3,603")
-    st.metric("Total Project Lines", "~4,500")
+    st.metric("Total Build Time", "~4 hours")
+    st.metric("Python Lines of Code", "4,830")
+    st.metric("Total Project Lines", "~6,200")
 
 with about_col2:
     st.markdown("#### Git Stats")
-    st.metric("Commits", "20")
-    st.metric("Total Insertions", "5,150")
-    st.metric("Source Files", "14 Python + configs")
+    st.metric("Commits", "26")
+    st.metric("Total Insertions", "6,955")
+    st.metric("Source Files", "18 Python + configs")
 
 with about_col3:
     st.markdown("#### Productivity")
-    st.metric("Est. Manual Coding Time", "25+ hours")
+    st.metric("Est. Manual Coding Time", "30+ hours")
     st.metric("Speedup vs Manual", "8–10x")
     st.metric("Deployed To", "Streamlit Cloud")
 
@@ -1349,9 +1349,11 @@ st.markdown("""
 | **1:30 – 2:00** | Dashboard — Streamlit app with Plotly charts, tabs, correlation analysis |
 | **2:00 – 2:30** | Polish — analyst comparison, methodology section, deployment to Streamlit Cloud |
 | **2:30 – 3:00** | Graham & Buffett valuation models, three-model comparison, methodology docs |
+| **3:00 – 3:30** | Mobile-responsive layout, statistical testing (t-stats, IC, OLS regression) |
+| **3:30 – 4:00** | Signal efficacy proof (conditional returns, strategy metrics), extraction reliability testing |
 
 #### Tech Stack
-`Claude API` · `Streamlit` · `Plotly` · `Pydantic` · `yfinance` · `Python 3.9+`
+`Claude API` · `Streamlit` · `Plotly` · `Pydantic` · `yfinance` · `scipy` · `statsmodels` · `Python 3.9+`
 
 ---
 *[View source on GitHub](https://github.com/CraziedAres/Project-Berkshire)*
