@@ -653,12 +653,12 @@ except Exception as e:
 
 st.divider()
 
-# Sidebar — keep minimal for mobile
-st.sidebar.header("Filters")
+# Sidebar
 selected_years = st.sidebar.multiselect(
-    "Letters",
+    "Filter Years",
     options=sorted(df["letter_year"].unique()),
     default=sorted(df["letter_year"].unique()),
+    label_visibility="collapsed",
 )
 
 df_filtered = df[df["letter_year"].isin(selected_years)]
