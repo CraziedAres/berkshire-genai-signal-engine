@@ -617,8 +617,53 @@ for analysis in sorted(analyses, key=lambda x: x.metadata.letter_year, reverse=T
             st.caption(f"*Signal: {excerpt.signal_type} — {excerpt.significance}*")
 
 # =============================================================================
-# FOOTER
+# ABOUT THIS PROJECT
 # =============================================================================
 
 st.divider()
-st.caption("Built with Claude API, Streamlit, and yfinance | Berkshire GenAI Signal Engine")
+st.header("About This Project")
+
+st.markdown("""
+**This entire project was built by dictating to [Claude Code](https://docs.anthropic.com/en/docs/claude-code)** — Anthropic's
+CLI agent for software engineering. No keystrokes were typed to write the code itself;
+every line was generated through natural language conversation.
+""")
+
+about_col1, about_col2, about_col3 = st.columns(3)
+
+with about_col1:
+    st.markdown("#### Build Metrics")
+    st.metric("Total Build Time", "~2.5 hours")
+    st.metric("Python Lines of Code", "2,964")
+    st.metric("Total Project Lines", "~3,870")
+
+with about_col2:
+    st.markdown("#### Git Stats")
+    st.metric("Commits", "16")
+    st.metric("Total Insertions", "4,614")
+    st.metric("Source Files", "14 Python + configs")
+
+with about_col3:
+    st.markdown("#### Productivity")
+    st.metric("Est. Manual Coding Time", "20+ hours")
+    st.metric("Speedup vs Manual", "6–10x")
+    st.metric("Deployed To", "Streamlit Cloud")
+
+st.markdown("""
+#### How It Was Built
+
+| Step | What Happened |
+|------|---------------|
+| **0:00 – 0:30** | Schema design — dictated the 25+ signal Pydantic models, prompt engineering |
+| **0:30 – 1:00** | Extraction pipeline — Claude API integration, letter parsing, dataset builder |
+| **1:00 – 1:30** | Fair value model — signal-based valuation, market sentiment from news |
+| **1:30 – 2:00** | Dashboard — Streamlit app with Plotly charts, tabs, correlation analysis |
+| **2:00 – 2:30** | Polish — analyst comparison, methodology section, deployment to Streamlit Cloud |
+
+#### Tech Stack
+`Claude API` · `Streamlit` · `Plotly` · `Pydantic` · `yfinance` · `Python 3.9+`
+
+---
+*The point: GenAI doesn't just analyze text — it writes the analyzer too.
+[View source on GitHub](https://github.com/CraziedAres/Project-Berkshire)*
+""")
