@@ -20,12 +20,84 @@ from src.valuation import (
     compute_buffett_valuation,
 )
 from src.sentiment import get_market_sentiment
+from src.statistics import (
+    compute_correlation_tstats,
+    compute_ic_summary,
+    compute_information_coefficients,
+    run_all_regressions,
+    compute_predictive_verdict,
+)
+
+# Shared Plotly layout defaults for mobile-friendly charts
+PLOTLY_MOBILE_LAYOUT = dict(
+    autosize=True,
+    margin=dict(l=10, r=10, t=40, b=40),
+    legend=dict(
+        orientation="h",
+        yanchor="bottom",
+        y=1.02,
+        xanchor="left",
+        x=0,
+        font=dict(size=11),
+    ),
+)
 
 st.set_page_config(
     page_title="Berkshire Signal Engine",
     page_icon="📈",
     layout="wide",
 )
+
+# --- Responsive CSS for mobile devices ---
+st.markdown("""
+<style>
+/* Stack columns vertically on small screens */
+@media (max-width: 768px) {
+    /* Make main content use full width */
+    .block-container {
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+    }
+
+    /* Stack st.columns vertically */
+    [data-testid="stHorizontalBlock"] {
+        flex-wrap: wrap !important;
+    }
+    [data-testid="stHorizontalBlock"] > [data-testid="stColumn"] {
+        width: 100% !important;
+        flex: 1 1 100% !important;
+        min-width: 100% !important;
+    }
+
+    /* Collapse sidebar by default on mobile */
+    [data-testid="stSidebar"] {
+        min-width: 0 !important;
+        max-width: 0 !important;
+        transform: translateX(-100%);
+    }
+    [data-testid="stSidebar"][aria-expanded="true"] {
+        min-width: 80vw !important;
+        max-width: 80vw !important;
+        transform: translateX(0);
+    }
+
+    /* Ensure tables scroll horizontally */
+    [data-testid="stDataFrame"] {
+        overflow-x: auto !important;
+    }
+
+    /* Reduce metric padding */
+    [data-testid="stMetric"] {
+        padding: 0.25rem 0 !important;
+    }
+
+    /* Slightly smaller title */
+    h1 {
+        font-size: 1.5rem !important;
+    }
+}
+</style>
+""", unsafe_allow_html=True)
 
 st.title("Berkshire GenAI Signal Engine")
 st.markdown("*Extracting structured signals from Buffett's shareholder letters*")
@@ -63,8 +135,9 @@ try:
     gv = compute_graham_valuation()
     bv = compute_buffett_valuation()
 
-    # Hero: 4 prices side by side
-    hero1, hero2, hero3, hero4 = st.columns(4)
+    # Hero: 2x2 grid (stacks well on mobile via CSS)
+    hero1, hero2 = st.columns(2)
+    hero3, hero4 = st.columns(2)
 
     with hero1:
         st.metric(
@@ -180,7 +253,7 @@ try:
         xaxis_title="Contribution to Adjustment",
         yaxis_title="",
         xaxis_tickformat=".1%",
-        margin=dict(l=0, r=0, t=10, b=0),
+        **PLOTLY_MOBILE_LAYOUT,
     )
     st.plotly_chart(fig, use_container_width=True)
 
@@ -504,7 +577,7 @@ try:
             yaxis_title="Price ($)",
             yaxis_tickformat="$,.0f",
             height=350,
-            margin=dict(l=0, r=0, t=40, b=0),
+            margin=dict(l=10, r=10, t=40, b=40),
         )
         # Add current price line
         fig.add_hline(
@@ -525,7 +598,7 @@ try:
 
     st.header("Market Sentiment Analysis")
 
-    sent_col1, sent_col2, sent_col3 = st.columns([1, 1, 2])
+    sent_col1, sent_col2 = st.columns(2)
 
     with sent_col1:
         # Sentiment pie chart
@@ -559,12 +632,11 @@ try:
         *(Scale: -1.0 bearish to +1.0 bullish)*
         """)
 
-    with sent_col3:
-        st.markdown("**Recent Headlines:**")
-        for item in sentiment.news_items[:6]:
-            emoji = "🟢" if item.sentiment_label == "bullish" else "🔴" if item.sentiment_label == "bearish" else "⚪"
-            trusted = " ✓" if item.is_trusted_source else ""
-            st.markdown(f"- {emoji} {item.headline} — *{item.source}*{trusted}")
+    st.markdown("**Recent Headlines:**")
+    for item in sentiment.news_items[:6]:
+        emoji = "🟢" if item.sentiment_label == "bullish" else "🔴" if item.sentiment_label == "bearish" else "⚪"
+        trusted = " ✓" if item.is_trusted_source else ""
+        st.markdown(f"- {emoji} {item.headline} — *{item.source}*{trusted}")
 
     st.caption("""
     ⚠️ **Disclaimer:** This is a demonstration model, not financial advice.
@@ -608,20 +680,21 @@ st.sidebar.markdown(f"""
 st.header("Historical Letter Analysis")
 st.markdown("*Trends from Buffett's shareholder letters over time. Use sidebar to filter years.*")
 
-col1, col2, col3, col4 = st.columns(4)
+hist_col1, hist_col2 = st.columns(2)
+hist_col3, hist_col4 = st.columns(2)
 
-with col1:
+with hist_col1:
     st.metric("Letters Analyzed", len(df_filtered))
 
-with col2:
+with hist_col2:
     avg_conf = df_filtered["confidence_overall"].mean()
     st.metric("Avg Confidence", f"{avg_conf:.2f}")
 
-with col3:
+with hist_col3:
     avg_unc = df_filtered["uncertainty_overall"].mean()
     st.metric("Avg Uncertainty", f"{avg_unc:.2f}")
 
-with col4:
+with hist_col4:
     avg_bull = df_filtered["composite_bullish"].mean()
     st.metric("Avg Bullish Score", f"{avg_bull:.2f}")
 
@@ -662,7 +735,7 @@ with tab1:
         xaxis_title="Letter Year",
         yaxis_title="Score (0-1)",
         yaxis_range=[0, 1],
-        legend=dict(orientation="h", yanchor="bottom", y=1.02),
+        **PLOTLY_MOBILE_LAYOUT,
     )
     st.plotly_chart(fig, use_container_width=True)
 
@@ -690,7 +763,7 @@ with tab2:
         xaxis_title="Letter Year",
         yaxis_title="Score (0-1)",
         yaxis_range=[0, 1],
-        legend=dict(orientation="h", yanchor="bottom", y=1.02),
+        **PLOTLY_MOBILE_LAYOUT,
     )
     st.plotly_chart(fig, use_container_width=True)
 
@@ -716,7 +789,7 @@ with tab3:
         xaxis_title="Letter Year",
         yaxis_title="Composite Score (0-1)",
         yaxis_range=[0, 1],
-        legend=dict(orientation="h", yanchor="bottom", y=1.02),
+        **PLOTLY_MOBILE_LAYOUT,
     )
     st.plotly_chart(fig, use_container_width=True)
 
@@ -777,6 +850,184 @@ else:
     st.info("No return data available yet (need stock data for post-letter periods)")
 
 # =============================================================================
+# STATISTICAL TESTS: Do signals predict returns?
+# =============================================================================
+
+st.header("Statistical Tests: Do Signals Predict Returns?")
+st.markdown("""
+*Beyond simple correlations — t-statistics, Information Coefficients (IC), and OLS regression
+test whether the extracted signals have genuine predictive power over forward returns.*
+""")
+
+try:
+    verdict = compute_predictive_verdict(df_filtered)
+
+    if "verdict" in verdict:
+        # --- Verdict banner ---
+        verdict_colors = {
+            "Strong evidence": "🟢",
+            "Moderate evidence": "🟡",
+            "Weak evidence": "🟠",
+            "No significant evidence": "🔴",
+        }
+        emoji = verdict_colors.get(verdict["verdict"], "⚪")
+
+        verd_col1, verd_col2 = st.columns(2)
+        with verd_col1:
+            st.metric("Verdict", f"{emoji} {verdict['verdict']}")
+            st.caption(verdict["verdict_detail"])
+        with verd_col2:
+            st.metric("Avg |IC|", f"{verdict['avg_abs_ic']:.3f}")
+            st.metric(
+                "Significant Tests",
+                f"{verdict['significant_at_10pct']}/{verdict['total_tests']} (p<0.10)",
+            )
+
+        st.divider()
+
+        # --- Tab layout for the three test types ---
+        stat_tab1, stat_tab2, stat_tab3 = st.tabs([
+            "Information Coefficients",
+            "Correlation T-Tests",
+            "OLS Regression",
+        ])
+
+        # TAB 1: Information Coefficients
+        with stat_tab1:
+            st.markdown("""
+            **Rank IC** (Spearman) measures monotonic association between signal ranks and
+            return ranks. More robust than Pearson for small samples. |IC| > 0.05 is
+            noteworthy in quant finance; > 0.10 is strong.
+            """)
+
+            ic_summary = compute_ic_summary(df_filtered)
+            if not ic_summary.empty:
+                # Heatmap
+                ic_heatmap = ic_summary[["30d", "60d", "90d"]]
+
+                fig = px.imshow(
+                    ic_heatmap,
+                    color_continuous_scale=["#d32f2f", "#ffffff", "#388e3c"],
+                    color_continuous_midpoint=0,
+                    zmin=-1,
+                    zmax=1,
+                    title="Rank IC: Signal × Return Horizon",
+                    aspect="auto",
+                    text_auto=".2f",
+                )
+                fig.update_layout(
+                    height=max(250, len(ic_heatmap) * 28),
+                    margin=dict(l=10, r=10, t=40, b=10),
+                )
+                st.plotly_chart(fig, use_container_width=True)
+
+                # Top signals table
+                st.markdown("**Top Signals by Average |IC|**")
+                top_ic = ic_summary.head(8).copy()
+                top_ic.index = top_ic.index.map(lambda x: x.replace("_", " ").title())
+                st.dataframe(
+                    top_ic.style.background_gradient(
+                        cmap="RdYlGn", subset=["30d", "60d", "90d"], vmin=-1, vmax=1,
+                    ).format("{:.3f}"),
+                    use_container_width=True,
+                )
+            else:
+                st.info("Not enough data to compute Information Coefficients.")
+
+        # TAB 2: Correlation T-Tests
+        with stat_tab2:
+            st.markdown("""
+            **Pearson r** with t-statistic and p-value. Highlighted rows are significant
+            at the 10% level. With small samples, even meaningful effects may not reach
+            significance — interpret alongside IC and regression results.
+            """)
+
+            tstat_df = compute_correlation_tstats(df_filtered)
+            if not tstat_df.empty:
+                display_df = tstat_df.copy()
+                display_df["signal"] = display_df["signal"].str.replace("_", " ").str.title()
+
+                # Highlight significant rows
+                def highlight_significant(row):
+                    if row["significant"]:
+                        return ["background-color: rgba(56, 142, 60, 0.15)"] * len(row)
+                    return [""] * len(row)
+
+                st.dataframe(
+                    display_df[["signal", "horizon", "pearson_r", "t_stat", "p_value", "n", "significant"]]
+                    .style.apply(highlight_significant, axis=1)
+                    .format({
+                        "pearson_r": "{:.3f}",
+                        "t_stat": "{:.2f}",
+                        "p_value": "{:.4f}",
+                    }),
+                    use_container_width=True,
+                    height=min(400, 35 * len(display_df) + 40),
+                )
+
+                sig_count = display_df["significant"].sum()
+                st.caption(
+                    f"{sig_count} of {len(display_df)} signal-horizon pairs significant at p < 0.10. "
+                    f"N = {display_df['n'].iloc[0]} letters."
+                )
+            else:
+                st.info("Not enough data for t-tests.")
+
+        # TAB 3: OLS Regression
+        with stat_tab3:
+            st.markdown("""
+            **OLS regression** of forward returns on the top signals (selected by |IC| to
+            avoid overfitting). Shows whether signals jointly explain return variation.
+            With small N, interpret R² cautiously — adjusted R² penalizes for degrees of freedom.
+            """)
+
+            regressions = run_all_regressions(df_filtered, max_features=5)
+            if regressions:
+                for reg in regressions:
+                    st.markdown(f"##### {reg['horizon']} Forward Return")
+
+                    reg_met1, reg_met2, reg_met3 = st.columns(3)
+                    with reg_met1:
+                        st.metric("R²", f"{reg['r_squared']:.3f}")
+                    with reg_met2:
+                        st.metric("Adj R²", f"{reg['adj_r_squared']:.3f}")
+                    with reg_met3:
+                        f_sig = "Yes" if reg["f_pvalue"] < 0.10 else "No"
+                        st.metric("F-test significant?", f_sig)
+                        st.caption(f"F = {reg['f_stat']:.2f}, p = {reg['f_pvalue']:.4f}")
+
+                    # Coefficients table
+                    coef_df = pd.DataFrame(reg["coefficients"])
+                    coef_df["name"] = coef_df["name"].str.replace("_", " ").str.title()
+
+                    def highlight_coef(row):
+                        if row["p_value"] < 0.10:
+                            return ["background-color: rgba(56, 142, 60, 0.15)"] * len(row)
+                        return [""] * len(row)
+
+                    st.dataframe(
+                        coef_df.style.apply(highlight_coef, axis=1).format({
+                            "coef": "{:.6f}",
+                            "std_err": "{:.6f}",
+                            "t_stat": "{:.2f}",
+                            "p_value": "{:.4f}",
+                        }),
+                        use_container_width=True,
+                    )
+                    st.caption(f"N = {reg['n']}, K = {reg['k']} features")
+                    st.divider()
+            else:
+                st.info("Not enough data to run regressions (need at least K+2 observations).")
+
+    else:
+        st.info(verdict.get("verdict_text", "Insufficient data for statistical testing."))
+
+except Exception as e:
+    st.warning(f"Statistical tests unavailable: {e}")
+
+st.divider()
+
+# =============================================================================
 # THEMES
 # =============================================================================
 
@@ -813,28 +1064,29 @@ for analysis in sorted(analyses, key=lambda x: x.metadata.letter_year, reverse=T
         continue
 
     with st.expander(f"📄 {analysis.metadata.letter_year} Letter"):
-        # Scores grid
-        col1, col2, col3, col4 = st.columns(4)
+        # Scores grid (2x2 for mobile)
+        detail_col1, detail_col2 = st.columns(2)
+        detail_col3, detail_col4 = st.columns(2)
 
-        with col1:
+        with detail_col1:
             st.markdown("**Confidence**")
             st.metric("Overall", f"{analysis.confidence.overall_confidence:.2f}")
             st.metric("Operating", f"{analysis.confidence.operating_business_confidence:.2f}")
             st.metric("Portfolio", f"{analysis.confidence.investment_portfolio_confidence:.2f}")
 
-        with col2:
+        with detail_col2:
             st.markdown("**Uncertainty**")
             st.metric("Overall", f"{analysis.uncertainty.overall_uncertainty:.2f}")
             st.metric("Macro", f"{analysis.uncertainty.macro_uncertainty:.2f}")
             st.metric("Market", f"{analysis.uncertainty.market_uncertainty:.2f}")
 
-        with col3:
+        with detail_col3:
             st.markdown("**Capital**")
             st.write(f"Posture: `{analysis.capital_allocation.posture.value}`")
             st.write(f"Cash Intent: `{analysis.capital_allocation.cash_intent.value}`")
             st.metric("Buyback", f"{analysis.capital_allocation.buyback_enthusiasm:.2f}")
 
-        with col4:
+        with detail_col4:
             st.markdown("**Market**")
             st.write(f"Regime: `{analysis.market_commentary.regime.value}`")
             st.metric("Valuation Concern", f"{analysis.market_commentary.valuation_concern:.2f}")
@@ -883,7 +1135,8 @@ CLI agent for software engineering. No keystrokes were typed to write the code i
 every line was generated through natural language conversation.
 """)
 
-about_col1, about_col2, about_col3 = st.columns(3)
+about_col1, about_col2 = st.columns(2)
+about_col3, _ = st.columns(2)
 
 with about_col1:
     st.markdown("#### Build Metrics")
